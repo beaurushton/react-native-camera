@@ -26,6 +26,8 @@
 @property(nonatomic, assign) NSInteger presetCamera;
 @property (assign, nonatomic) NSInteger flashMode;
 @property (assign, nonatomic) CGFloat zoom;
+@property (assign, nonatomic) NSInteger autoExposure;
+@property (copy, nonatomic) NSDictionary *autoExposurePointOfInterest;
 @property (assign, nonatomic) NSInteger autoFocus;
 @property (assign, nonatomic) float focusDepth;
 @property (assign, nonatomic) NSInteger whiteBalance;
@@ -37,6 +39,8 @@
 - (void)updateFlashMode;
 - (void)updateFocusMode;
 - (void)updateFocusDepth;
+- (void)updateAutoExposureMode;
+- (void)updateAutoExposurePointOfInterest;
 - (void)updateZoom;
 - (void)updateWhiteBalance;
 - (void)updateFaceDetecting:(id)isDetectingFaces;

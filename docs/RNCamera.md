@@ -172,6 +172,22 @@ AppRegistry.registerComponent('BadInstagramCloneApp', () => App);
 
 ## Properties
 
+#### `iOS` `autoExposure`
+
+Values: `RNCamera.Constants.AutoExposure.on` (default) or `RNCamera.Constants.AutoExposure.off`
+
+Most cameras have a Auto Exposure feature. It adjusts your camera lens exposure automatically depending on the pixels seen by your camera.
+
+Use the `autoExposure` property to specify the auto exposure setting of your camera. `RNCamera.Constants.AutoExposure.on` turns it ON, `RNCamera.Constants.AutoExposure.off` turns it OFF.
+
+#### `iOS` `autoExposurePointOfInterest`
+
+Values: Object `{ x: 0.5, y: 0.5 }`.
+
+Setting this property causes the auto exposure feature of the camera to attempt to set exposure based on the part of the image at this coordiate.
+
+Coordinates values are measured as floats from `0` to `1.0`.  `{ x: 0, y: 0 }` will focus on the top left of the image, `{ x: 1, y: 1 }` will be the bottom right. Values are based on landscape mode with the home button on the right—this applies even if the device is in portrait mode.
+
 #### `autoFocus`
 
 Values: `RNCamera.Constants.AutoFocus.on` (default) or `RNCamera.Constants.AutoFocus.off`
