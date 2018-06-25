@@ -30,7 +30,7 @@ const styles = StyleSheet.create({
   },
 });
 
-type Orientation = "auto"|"landscapeLeft"|"landscapeRight"|"portrait"|"portraitUpsideDown";
+type Orientation = 'auto' | 'landscapeLeft' | 'landscapeRight' | 'portrait' | 'portraitUpsideDown';
 
 type PictureOptions = {
   quality?: number,
@@ -80,6 +80,7 @@ type PropsType = typeof View.props & {
   ratio?: string,
   focusDepth?: number,
   type?: number | string,
+  onAudioMetering?: Function,
   onCameraReady?: Function,
   onBarCodeRead?: Function,
   onGoogleVisionBarcodesDetected?: Function,
@@ -174,6 +175,7 @@ export default class Camera extends React.Component<PropsType, StateType> {
     ratio: PropTypes.string,
     focusDepth: PropTypes.number,
     onMountError: PropTypes.func,
+    onAudioMetering: PropTypes.func,
     onCameraReady: PropTypes.func,
     onBarCodeRead: PropTypes.func,
     onGoogleVisionBarcodesDetected: PropTypes.func,
@@ -283,9 +285,15 @@ export default class Camera extends React.Component<PropsType, StateType> {
     }
   };
 
-  _onCameraReady = () => {
+  _onCameraReady = ({ nativeEvent }: EventCallbackArgumentsType) => {
     if (this.props.onCameraReady) {
-      this.props.onCameraReady();
+      this.props.onCameraReady(nativeEvent);
+    }
+  };
+
+  _onAudioMetering = ({ nativeEvent }: EventCallbackArgumentsType) => {
+    if (this.props.onAudioMetering) {
+      this.props.onAudioMetering(nativeEvent);
     }
   };
 
@@ -357,6 +365,7 @@ export default class Camera extends React.Component<PropsType, StateType> {
           ref={this._setReference}
           onMountError={this._onMountError}
           onCameraReady={this._onCameraReady}
+          onAudioMetering={this._onAudioMetering}
           onGoogleVisionBarcodesDetected={this._onObjectDetected(
             this.props.onGoogleVisionBarcodesDetected,
           )}
@@ -376,6 +385,10 @@ export default class Camera extends React.Component<PropsType, StateType> {
 
   _convertNativeProps(props: PropsType) {
     const newProps = mapValues(props, this._convertProp);
+
+    if (props.onAudioMetering) {
+      newProps.audioMeteringEnabled = true;
+    }
 
     if (props.onBarCodeRead) {
       newProps.barCodeScannerEnabled = true;
@@ -424,6 +437,7 @@ const RNCamera = requireNativeComponent('RNCamera', Camera, {
     faceDetectorEnabled: true,
     textRecognizerEnabled: true,
     importantForAccessibility: true,
+    onAudioMetering: true,
     onBarCodeRead: true,
     onGoogleVisionBarcodesDetected: true,
     onCameraReady: true,
