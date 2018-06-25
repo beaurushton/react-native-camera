@@ -81,6 +81,7 @@ type PropsType = typeof View.props & {
   focusDepth?: number,
   type?: number | string,
   onAudioMetering?: Function,
+  onCameraFeaturesDetected?: Function,
   onCameraReady?: Function,
   onBarCodeRead?: Function,
   onGoogleVisionBarcodesDetected?: Function,
@@ -176,6 +177,7 @@ export default class Camera extends React.Component<PropsType, StateType> {
     focusDepth: PropTypes.number,
     onMountError: PropTypes.func,
     onAudioMetering: PropTypes.func,
+    onCameraFeaturesDetected: PropTypes.func,
     onCameraReady: PropTypes.func,
     onBarCodeRead: PropTypes.func,
     onGoogleVisionBarcodesDetected: PropTypes.func,
@@ -294,6 +296,12 @@ export default class Camera extends React.Component<PropsType, StateType> {
   _onAudioMetering = ({ nativeEvent }: EventCallbackArgumentsType) => {
     if (this.props.onAudioMetering) {
       this.props.onAudioMetering(nativeEvent);
+    }
+  };
+
+  _onCameraFeaturesDetected = ({ nativeEvent }: EventCallbackArgumentsType) => {
+    if (this.props.onCameraFeaturesDetected) {
+      this.props.onCameraFeaturesDetected(nativeEvent);
     }
   };
 
@@ -440,6 +448,7 @@ const RNCamera = requireNativeComponent('RNCamera', Camera, {
     onAudioMetering: true,
     onBarCodeRead: true,
     onGoogleVisionBarcodesDetected: true,
+    onCameraFeaturesDetected: true,
     onCameraReady: true,
     onFaceDetected: true,
     onLayout: true,

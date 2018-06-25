@@ -252,6 +252,10 @@ By default a <ActivityIndicator> will be displayed while the component is waitin
 
 ### Native Event callbacks props
 
+#### `onCameraFeaturesDetected`
+
+Function to be called when camera is ready or features change.  Returns a data object with details of supported frame rates, resolutions, lenses, exposurePointOfInterest and focusPointOfInterest support and audio input sources.
+
 #### `onCameraReady`
 
 Function to be called when native code emit onCameraReady event, when camera is ready.

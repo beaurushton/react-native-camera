@@ -52,6 +52,7 @@
 - (void)onCodeRead:(NSDictionary *)event;
 - (void)onFacesDetected:(NSDictionary *)event;
 - (void)onAudioMetering:(NSDictionary *)event;
+- (void)onCameraFeaturesDetected:(NSDictionary *)event;
 
 @end
 

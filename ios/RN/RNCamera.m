@@ -22,6 +22,7 @@
 @property (nonatomic, copy) RCTDirectEventBlock onBarCodeRead;
 @property (nonatomic, copy) RCTDirectEventBlock onFacesDetected;
 @property (nonatomic, copy) RCTDirectEventBlock onAudioMetering;
+@property (nonatomic, copy) RCTDirectEventBlock onCameraFeaturesDetected;
 
 @end
 
@@ -90,6 +91,13 @@ static NSDictionary *defaultFaceDetectorOptions = nil;
 {
     if (_onAudioMetering) {
         _onAudioMetering(event);
+    }
+}
+
+- (void)onCameraFeaturesDetected:(NSDictionary *)event
+{
+    if (_onCameraFeaturesDetected) {
+        _onCameraFeaturesDetected(event);
     }
 }
 

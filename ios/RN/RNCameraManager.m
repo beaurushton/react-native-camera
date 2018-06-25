@@ -17,6 +17,7 @@ RCT_EXPORT_VIEW_PROPERTY(onMountError, RCTDirectEventBlock);
 RCT_EXPORT_VIEW_PROPERTY(onBarCodeRead, RCTDirectEventBlock);
 RCT_EXPORT_VIEW_PROPERTY(onFacesDetected, RCTDirectEventBlock);
 RCT_EXPORT_VIEW_PROPERTY(onAudioMetering, RCTDirectEventBlock);
+RCT_EXPORT_VIEW_PROPERTY(onCameraFeaturesDetected, RCTDirectEventBlock);
 
 + (BOOL)requiresMainQueueSetup
 {
@@ -72,7 +73,7 @@ RCT_EXPORT_VIEW_PROPERTY(onAudioMetering, RCTDirectEventBlock);
 
 - (NSArray<NSString *> *)supportedEvents
 {
-    return @[@"onCameraReady", @"onMountError", @"onBarCodeRead", @"onFacesDetected", @"onAudioMetering"];
+    return @[@"onCameraReady", @"onMountError", @"onBarCodeRead", @"onFacesDetected", @"onAudioMetering", @"onCameraFeaturesDetected"];
 }
 
 + (NSDictionary *)validCodecTypes
