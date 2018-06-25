@@ -160,7 +160,7 @@ const styles = StyleSheet.create({
 AppRegistry.registerComponent('BadInstagramCloneApp', () => App);
 ```
 
-#### `camera` 
+#### `camera`
 
 *It's the RNCamera's reference*
 
