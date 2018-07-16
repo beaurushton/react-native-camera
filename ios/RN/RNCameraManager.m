@@ -140,6 +140,12 @@ RCT_CUSTOM_VIEW_PROPERTY(flashMode, NSInteger, RNCamera)
     [view updateFlashMode];
 }
 
+RCT_CUSTOM_VIEW_PROPERTY(audioMeteringEnabled, BOOL, RNCamera)
+{
+    view.audioMeteringEnabled = [RCTConvert BOOL:json];
+    [view updateAudioMetering];
+}
+
 RCT_CUSTOM_VIEW_PROPERTY(autoFocus, NSInteger, RNCamera)
 {
     [view setAutoFocus:[RCTConvert NSInteger:json]];

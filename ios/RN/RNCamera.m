@@ -51,7 +51,42 @@ static NSDictionary *defaultFaceDetectorOptions = nil;
                                                  selector:@selector(orientationChanged:)
                                                      name:UIDeviceOrientationDidChangeNotification
                                                    object:nil];
+
+        [[NSNotificationCenter defaultCenter] addObserver:self
+                                            selector:@selector(handleRouteChange:)
+                                                name:AVAudioSessionRouteChangeNotification
+                                            object:nil];
+
         self.autoFocus = -1;
+        NSError *sessionError = nil;
+        AVAudioSession *audioSession = [AVAudioSession sharedInstance];
+        [audioSession setCategory:AVAudioSessionCategoryPlayAndRecord error:&sessionError];
+        [audioSession setActive:YES error:&sessionError];
+
+        NSURL *contentURL = [NSURL URLWithString:@"/dev/null"];
+        NSMutableDictionary *recordSettings = [[NSMutableDictionary alloc] init];
+        [recordSettings setObject:[NSNumber numberWithInt:kAudioFormatAppleLossless] forKey: AVFormatIDKey];
+        [recordSettings setObject:[NSNumber numberWithFloat:22050.0] forKey: AVSampleRateKey];
+        [recordSettings setObject:[NSNumber numberWithInt:1] forKey:AVNumberOfChannelsKey];
+        [recordSettings setObject:[NSNumber numberWithInt:12800] forKey:AVEncoderBitRateKey];
+        [recordSettings setObject:[NSNumber numberWithInt:16] forKey:AVLinearPCMBitDepthKey];
+        [recordSettings setObject:[NSNumber numberWithInt: AVAudioQualityLow] forKey: AVEncoderAudioQualityKey];
+
+        self.audioRecorder = [[AVAudioRecorder alloc] initWithURL:contentURL settings:recordSettings error:nil];
+
+        if([[AVAudioSession sharedInstance] respondsToSelector:@selector(requestRecordPermission:)]) {
+            [[AVAudioSession sharedInstance] requestRecordPermission:^(BOOL granted) {
+                // RCTLogWarn(@"permission : %d", granted);
+                // if(granted)[self setupMic];
+            }];
+        }
+
+        [self.audioRecorder prepareToRecord];
+        self.audioRecorder.meteringEnabled = YES;
+        [self.audioRecorder record];
+        [self.audioRecorder updateMeters];
+        [self updateAudioMetering];
+
         //        [[NSNotificationCenter defaultCenter] addObserver:self
         //                                                 selector:@selector(bridgeDidForeground:)
         //                                                     name:EX_UNVERSIONED(@"EXKernelBridgeDidForegroundNotification")
@@ -91,6 +126,37 @@ static NSDictionary *defaultFaceDetectorOptions = nil;
 {
     if (_onAudioMetering) {
         _onAudioMetering(event);
+    }
+}
+
+- (void)audioMeterTimer {
+    [self.audioRecorder updateMeters]; // instance of AVAudioRecorder
+    NSDictionary *event = @{
+        @"averagePower" : [NSNumber numberWithFloat:[self.audioRecorder averagePowerForChannel:0]],
+        @"peakPower" : [NSNumber numberWithFloat:[self.audioRecorder peakPowerForChannel:0]],
+        };
+    [self onAudioMetering:event];
+}
+
+- (void)startAudioMetering {
+    if (!self.meterTimer) {
+        self.meterTimer = [NSTimer scheduledTimerWithTimeInterval:0.033 target:self selector:@selector(audioMeterTimer)userInfo:nil repeats:YES];
+    }
+}
+
+- (void)stopAudioMetering {
+    if ([self.meterTimer isValid]) {
+        [self.meterTimer invalidate];
+    }
+    self.meterTimer = nil;
+}
+
+- (void)updateAudioMetering
+{
+    if ([self isAudioMeteringEnabled]) {
+        [self startAudioMetering];
+    } else {
+        [self stopAudioMetering];
     }
 }
 
@@ -463,6 +529,159 @@ static NSDictionary *defaultFaceDetectorOptions = nil;
     [self.movieFileOutput stopRecording];
 }
 
+- (void)detectCameraFeatures
+{
+#if TARGET_IPHONE_SIMULATOR
+    return;
+#endif
+
+    NSMutableDictionary *cameraFeatures = [[NSMutableDictionary alloc] init];
+
+    // AUDIO
+    AVAudioSession *audioSession = [AVAudioSession sharedInstance];
+
+    // active input
+    for (AVAudioSessionPortDescription *desc in audioSession.currentRoute.inputs) {
+        cameraFeatures[@"activeAudioInputType"] = desc.portType;
+        cameraFeatures[@"activeAudioInputName"] = desc.portName;
+    }
+
+    // https://stackoverflow.com/questions/46612223/avaudiorecorder-avaudiosession-with-apple-airpods
+    // available inputs
+    NSMutableArray *availableAudioInputs = [NSMutableArray array];
+    for (AVAudioSessionPortDescription *desc in audioSession.availableInputs) {
+        // RCTLogWarn(@"av input route desc %@", desc);
+        [availableAudioInputs addObject: desc.portType];
+    }
+    cameraFeatures[@"availableAudioInputs"] = availableAudioInputs;
+
+
+    //  AVCaptureDevice *audioCaptureDevice = [AVCaptureDevice defaultDeviceWithMediaType:AVMediaTypeAudio];
+    //  RCTLogWarn(@"default audio device %@", audioCaptureDevice);
+
+    // // available inputs
+    // if (@available(iOS 10.0, *)) {
+    //     AVCaptureDeviceDiscoverySession *audioInputs = [AVCaptureDeviceDiscoverySession discoverySessionWithDeviceTypes:@[AVCaptureDeviceTypeBuiltInMicrophone] mediaType:AVMediaTypeAudio position:AVCaptureDevicePositionUnspecified];
+    //     for(AVCaptureDevice *device in audioInputs.devices) {
+    //         RCTLogWarn(@"audio input type %@", device);
+    //     }
+    // } else {
+    //     // Fallback on earlier versions
+    // }
+
+
+
+    // CAMERAS
+
+    // active camera
+    AVCaptureDevice *activeDevice = self.videoCaptureDeviceInput.device;
+    NSString *activeDevicePositon = @"Unspecified";
+            if (activeDevice.position == AVCaptureDevicePositionFront) {
+              activeDevicePositon = @"Front";
+            }
+            if (activeDevice.position == AVCaptureDevicePositionBack) {
+              activeDevicePositon = @"Back";
+            }
+    NSMutableDictionary *activeDeviceFormats = [NSMutableDictionary new];
+    for ( AVCaptureDeviceFormat *format in [activeDevice formats] ) {
+        CMVideoDimensions dimensions = CMVideoFormatDescriptionGetDimensions(format.formatDescription);
+        NSString *dimensionKey = [NSString stringWithFormat:@"%dx%d", dimensions.width, dimensions.height];
+        NSMutableArray *formatsForDimensions = activeDeviceFormats[dimensionKey] ?activeDeviceFormats[dimensionKey] : [NSMutableArray array];
+        NSMutableArray *frameRateRangesForFormat = [NSMutableArray array];
+        for ( AVFrameRateRange *range in [format videoSupportedFrameRateRanges] ) {
+            NSDictionary *rangeDetails = @{
+                @"minFrameRate" : [NSString stringWithFormat:@"%f", range.minFrameRate],
+                @"maxFrameRate" : [NSString stringWithFormat:@"%f", range.maxFrameRate],
+                };
+            [frameRateRangesForFormat addObject: rangeDetails];
+        }
+        NSDictionary *formatDetails = @{
+                                      @"width" : [NSNumber numberWithInt:dimensions.width],
+                                      @"height" : [NSNumber numberWithInt:dimensions.height],
+                                      @"frameRateRanges" : frameRateRangesForFormat,
+                                      };
+        [formatsForDimensions addObject: formatDetails];
+        activeDeviceFormats[dimensionKey] = formatsForDimensions;
+    }
+    NSDictionary *activeDeviceDetails = @{
+                @"deviceType" : [NSString stringWithFormat:@"%@", activeDevice.deviceType],
+                @"position" : [NSString stringWithFormat:@"%@", activeDevicePositon],
+                @"modelID" : [NSString stringWithFormat:@"%@", activeDevice.modelID],
+                @"localizedName" : [NSString stringWithFormat:@"%@", activeDevice.localizedName],
+                @"lensAperture" : [NSString stringWithFormat:@"%f", activeDevice.lensAperture],
+                @"exposurePointOfInterestSupported": activeDevice.exposurePointOfInterestSupported ? [NSNumber numberWithBool:YES] : [NSNumber numberWithBool:NO],
+                @"focusPointOfInterestSupported": activeDevice.focusPointOfInterestSupported ? [NSNumber numberWithBool:YES] : [NSNumber numberWithBool:NO],
+                @"formats": activeDeviceFormats,
+            };
+    cameraFeatures[@"activeCamera"] = activeDeviceDetails;
+
+    // available cameras
+    if (@available(iOS 10.0, *)) {
+
+        NSArray *allTypes = @[];
+        if (@available(iOS 11.1, *)) {
+            allTypes = @[AVCaptureDeviceTypeBuiltInTrueDepthCamera, AVCaptureDeviceTypeBuiltInDualCamera, AVCaptureDeviceTypeBuiltInWideAngleCamera, AVCaptureDeviceTypeBuiltInTelephotoCamera ];
+        } else if (@available(iOS 10.2, *)) {
+            allTypes = @[AVCaptureDeviceTypeBuiltInDualCamera, AVCaptureDeviceTypeBuiltInWideAngleCamera, AVCaptureDeviceTypeBuiltInTelephotoCamera ];
+        } else {
+            allTypes = @[AVCaptureDeviceTypeBuiltInWideAngleCamera, AVCaptureDeviceTypeBuiltInTelephotoCamera ];
+        }
+
+        NSMutableArray *availableCameras = [NSMutableArray array];
+        AVCaptureDeviceDiscoverySession *discoveredCameras = [AVCaptureDeviceDiscoverySession discoverySessionWithDeviceTypes:allTypes mediaType:AVMediaTypeVideo position:AVCaptureDevicePositionUnspecified];
+        for(AVCaptureDevice *device in discoveredCameras.devices) {
+            // array of devices
+            // RCTLogWarn(@"device: %@", device);
+
+            // device formats
+            NSMutableDictionary *cameraFormats = [NSMutableDictionary new];
+            for ( AVCaptureDeviceFormat *format in [device formats] ) {
+                // RCTLogWarn(@"format: %@", format);
+                CMVideoDimensions dimensions = CMVideoFormatDescriptionGetDimensions(format.formatDescription);
+                NSString *dimensionKey = [NSString stringWithFormat:@"%dx%d", dimensions.width, dimensions.height];
+                NSMutableArray *formatsForDimensions = cameraFormats[dimensionKey] ? cameraFormats[dimensionKey] : [NSMutableArray array];
+                NSMutableArray *frameRateRangesForFormat = [NSMutableArray array];
+                for ( AVFrameRateRange *range in [format videoSupportedFrameRateRanges] ) {
+                    NSDictionary *rangeDetails = @{
+                        @"minFrameRate" : [NSString stringWithFormat:@"%f", range.minFrameRate],
+                        @"maxFrameRate" : [NSString stringWithFormat:@"%f", range.maxFrameRate],
+                        };
+                    [frameRateRangesForFormat addObject: rangeDetails];
+                }
+                NSDictionary *formatDetails = @{
+                                              @"width" : [NSNumber numberWithInt:dimensions.width],
+                                              @"height" : [NSNumber numberWithInt:dimensions.height],
+                                              @"frameRateRanges" : frameRateRangesForFormat,
+                                              };
+                [formatsForDimensions addObject: formatDetails];
+                cameraFormats[dimensionKey] = formatsForDimensions;
+            }
+
+            NSString *devicePositon = @"Unspecified";
+            if (device.position == AVCaptureDevicePositionFront) {
+              devicePositon = @"Front";
+            }
+            if (device.position == AVCaptureDevicePositionBack) {
+              devicePositon = @"Back";
+            }
+
+            NSDictionary *deviceDetails = @{
+                @"deviceType" : [NSString stringWithFormat:@"%@", device.deviceType],
+                @"position" : [NSString stringWithFormat:@"%@", devicePositon],
+                @"modelID" : [NSString stringWithFormat:@"%@", device.modelID],
+                @"localizedName" : [NSString stringWithFormat:@"%@", device.localizedName],
+                @"lensAperture" : [NSString stringWithFormat:@"%f", device.lensAperture],
+                @"exposurePointOfInterestSupported": device.exposurePointOfInterestSupported ? [NSNumber numberWithBool:YES] : [NSNumber numberWithBool:NO],
+                @"focusPointOfInterestSupported": device.focusPointOfInterestSupported ? [NSNumber numberWithBool:YES] : [NSNumber numberWithBool:NO],
+                @"formats": cameraFormats,
+            };
+            [availableCameras addObject: deviceDetails];
+        }
+        cameraFeatures[@"availableCameras"] = availableCameras;
+    }
+    [self onCameraFeaturesDetected:cameraFeatures];
+}
+
 - (void)startSession
 {
 #if TARGET_IPHONE_SIMULATOR
@@ -513,6 +732,8 @@ static NSDictionary *defaultFaceDetectorOptions = nil;
 
         [self.session startRunning];
         [self onReady:nil];
+
+        [self detectCameraFeatures];
     });
 }
 
@@ -674,6 +895,30 @@ static NSDictionary *defaultFaceDetectorOptions = nil;
             [strongSelf.previewLayer.connection setVideoOrientation:videoOrientation];
         }
     });
+}
+
+- (void)handleRouteChange:(NSNotification *)notification
+{
+    NSNumber *reasonValue = [[notification userInfo] objectForKey:AVAudioSessionRouteChangeReasonKey];
+    NSString *reasonPreviousRoute = [[notification userInfo] objectForKey:AVAudioSessionRouteChangePreviousRouteKey];
+    // RCTLogWarn(@"SESSION ROUTE CHANGED %@ %@", reasonValue, reasonPreviousRoute);
+
+    [self detectCameraFeatures];
+
+    // AVCaptureDevice *audioCaptureDevice = [AVCaptureDevice defaultDeviceWithMediaType:AVMediaTypeAudio];
+    // RCTLogWarn(@"audioCaptureDevice %@", audioCaptureDevice);
+
+    // switch (reasonValue.unsignedIntegerValue) {
+    //     case AVAudioSessionRouteChangeReasonNewDeviceAvailable: {
+    //             RCTLogWarn(@"new device");
+    //         } break;
+    //     case AVAudioSessionRouteChangeReasonOldDeviceUnavailable: {
+    //             RCTLogWarn(@"device removed");
+    //         } break;
+    //     default:
+    //         break;
+    // }
+
 }
 
 # pragma mark - AVCaptureMetadataOutput

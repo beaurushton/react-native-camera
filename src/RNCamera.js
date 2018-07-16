@@ -189,6 +189,7 @@ export default class Camera extends React.Component<PropsType, StateType> {
     barCodeTypes: PropTypes.arrayOf(PropTypes.string),
     googleVisionBarcodeType: PropTypes.number,
     type: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
+    useTelephoto: PropTypes.bool,
     flashMode: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
     whiteBalance: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
     autoFocus: PropTypes.oneOfType([PropTypes.string, PropTypes.number, PropTypes.bool]),
@@ -205,6 +206,7 @@ export default class Camera extends React.Component<PropsType, StateType> {
     zoom: 0,
     ratio: '4:3',
     focusDepth: 0,
+    useTelephoto: false,
     type: CameraManager.Type.back,
     autoFocus: CameraManager.AutoFocus.on,
     flashMode: CameraManager.FlashMode.off,
@@ -373,6 +375,7 @@ export default class Camera extends React.Component<PropsType, StateType> {
           ref={this._setReference}
           onMountError={this._onMountError}
           onCameraReady={this._onCameraReady}
+          onCameraFeaturesDetected={this._onCameraFeaturesDetected}
           onAudioMetering={this._onAudioMetering}
           onGoogleVisionBarcodesDetected={this._onObjectDetected(
             this.props.onGoogleVisionBarcodesDetected,
@@ -394,9 +397,7 @@ export default class Camera extends React.Component<PropsType, StateType> {
   _convertNativeProps(props: PropsType) {
     const newProps = mapValues(props, this._convertProp);
 
-    if (props.onAudioMetering) {
-      newProps.audioMeteringEnabled = true;
-    }
+    newProps.audioMeteringEnabled = typeof props.onAudioMetering === 'function';
 
     if (props.onBarCodeRead) {
       newProps.barCodeScannerEnabled = true;
@@ -446,6 +447,7 @@ const RNCamera = requireNativeComponent('RNCamera', Camera, {
     textRecognizerEnabled: true,
     importantForAccessibility: true,
     onAudioMetering: true,
+    audioMeteringEnabled: true,
     onBarCodeRead: true,
     onGoogleVisionBarcodesDetected: true,
     onCameraFeaturesDetected: true,
