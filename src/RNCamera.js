@@ -89,6 +89,8 @@ type PropsType = typeof View.props & {
   googleVisionBarcodeType?: number,
   whiteBalance?: number | string,
   faceDetectionLandmarks?: number,
+  autoExposure?: string | boolean | number,
+  autoExposurePointOfInterest?: { x: number, y: number },
   autoFocus?: string | boolean | number,
   autoFocusPointOfInterest?: { x: number, y: number },
   faceDetectionClassifications?: number,
@@ -117,6 +119,9 @@ const CameraManager: Object = NativeModules.RNCameraManager ||
     stubbed: true,
     Type: {
       back: 1,
+    },
+    AutoExposure: {
+      on: 1,
     },
     AutoFocus: {
       on: 1,
@@ -147,6 +152,7 @@ export default class Camera extends React.Component<PropsType, StateType> {
   static Constants = {
     Type: CameraManager.Type,
     FlashMode: CameraManager.FlashMode,
+    AutoExposure: CameraManager.AutoExposure,
     AutoFocus: CameraManager.AutoFocus,
     WhiteBalance: CameraManager.WhiteBalance,
     VideoQuality: CameraManager.VideoQuality,
@@ -161,6 +167,7 @@ export default class Camera extends React.Component<PropsType, StateType> {
   static ConversionTables = {
     type: CameraManager.Type,
     flashMode: CameraManager.FlashMode,
+    autoExposure: CameraManager.AutoExposure,
     autoFocus: CameraManager.AutoFocus,
     whiteBalance: CameraManager.WhiteBalance,
     faceDetectionMode: (CameraManager.FaceDetection || {}).Mode,
@@ -188,6 +195,8 @@ export default class Camera extends React.Component<PropsType, StateType> {
     type: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
     flashMode: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
     whiteBalance: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
+    autoExposure: PropTypes.oneOfType([PropTypes.string, PropTypes.number, PropTypes.bool]),
+    autoExposurePointOfInterest: PropTypes.shape({ x: PropTypes.number, y: PropTypes.number }),
     autoFocus: PropTypes.oneOfType([PropTypes.string, PropTypes.number, PropTypes.bool]),
     autoFocusPointOfInterest: PropTypes.shape({ x: PropTypes.number, y: PropTypes.number }),
     permissionDialogTitle: PropTypes.string,
@@ -204,6 +213,7 @@ export default class Camera extends React.Component<PropsType, StateType> {
     ratio: '4:3',
     focusDepth: 0,
     type: CameraManager.Type.back,
+    autoExposure: CameraManager.AutoExposure.on,
     autoFocus: CameraManager.AutoFocus.on,
     flashMode: CameraManager.FlashMode.off,
     whiteBalance: CameraManager.WhiteBalance.auto,

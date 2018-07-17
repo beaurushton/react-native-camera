@@ -26,6 +26,11 @@ typedef NS_ENUM(NSInteger, RNCameraOrientation) {
     RNCameraOrientationPortraitUpsideDown = AVCaptureVideoOrientationPortraitUpsideDown
 };
 
+typedef NS_ENUM(NSInteger, RNCameraAutoExposure) {
+    RNCameraAutoExposureOff = AVCaptureExposureModeLocked,
+    RNCameraAutoExposureOn = AVCaptureExposureModeContinuousAutoExposure,
+};
+
 typedef NS_ENUM(NSInteger, RNCameraAutoFocus) {
     RNCameraAutoFocusOff = AVCaptureFocusModeLocked,
     RNCameraAutoFocusOn = AVCaptureFocusModeContinuousAutoFocus,

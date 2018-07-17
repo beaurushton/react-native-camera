@@ -38,6 +38,8 @@ RCT_EXPORT_VIEW_PROPERTY(onFacesDetected, RCTDirectEventBlock);
                      @"auto" : @(RNCameraFlashModeAuto),
                      @"torch" : @(RNCameraFlashModeTorch)
                      },
+             @"AutoExposure" :
+                 @{@"on" : @(RNCameraAutoExposureOn), @"off" : @(RNCameraAutoExposureOff)},
              @"AutoFocus" :
                  @{@"on" : @(RNCameraAutoFocusOn), @"off" : @(RNCameraAutoFocusOff)},
              @"WhiteBalance" : @{
@@ -136,6 +138,18 @@ RCT_CUSTOM_VIEW_PROPERTY(flashMode, NSInteger, RNCamera)
 {
     [view setFlashMode:[RCTConvert NSInteger:json]];
     [view updateFlashMode];
+}
+
+RCT_CUSTOM_VIEW_PROPERTY(autoExposure, NSInteger, RNCamera)
+{
+    [view setAutoExposure:[RCTConvert NSInteger:json]];
+    [view updateAutoExposureMode];
+}
+
+RCT_CUSTOM_VIEW_PROPERTY(autoExposurePointOfInterest, NSDictionary, RNCamera)
+{
+    [view setAutoExposurePointOfInterest:[RCTConvert NSDictionary:json]];
+    [view updateAutoExposurePointOfInterest];
 }
 
 RCT_CUSTOM_VIEW_PROPERTY(autoFocus, NSInteger, RNCamera)

@@ -209,6 +209,60 @@ static NSDictionary *defaultFaceDetectorOptions = nil;
     [device unlockForConfiguration];
 }
 
+- (void)updateAutoExposureMode
+{
+    AVCaptureDevice *device = [self.videoCaptureDeviceInput device];
+    NSError *error = nil;
+
+    if (![device lockForConfiguration:&error]) {
+        if (error) {
+            RCTLogError(@"%s: %@", __func__, error);
+        }
+        return;
+    }
+
+
+    if ([device isExposureModeSupported:self.autoExposure]) {
+        if ([device lockForConfiguration:&error]) {
+            [device setExposureMode:self.autoExposure];
+        } else {
+            if (error) {
+                RCTLogError(@"%s: %@", __func__, error);
+            }
+        }
+    }
+
+    [device unlockForConfiguration];
+}
+
+- (void)updateAutoExposurePointOfInterest
+{
+    AVCaptureDevice *device = [self.videoCaptureDeviceInput device];
+    NSError *error = nil;
+
+    if (![device lockForConfiguration:&error]) {
+        if (error) {
+            RCTLogError(@"%s: %@", __func__, error);
+        }
+        return;
+    }
+
+    if ([self.autoExposurePointOfInterest objectForKey:@"x"] && [self.autoExposurePointOfInterest objectForKey:@"y"]) {
+        float xValue = [self.autoExposurePointOfInterest[@"x"] floatValue];
+        float yValue = [self.autoExposurePointOfInterest[@"y"] floatValue];
+        if ([device isExposurePointOfInterestSupported] && [device isExposureModeSupported:AVCaptureExposureModeContinuousAutoExposure]) {
+            CGPoint autoExposurePoint = CGPointMake(xValue, yValue);
+            [device setExposurePointOfInterest:autoExposurePoint];
+            [device setExposureMode:AVCaptureExposureModeContinuousAutoExposure];
+          }
+        else {
+            RCTLogWarn(@"AutoExposurePointOfInterest not supported");
+        }
+    }
+
+    [device unlockForConfiguration];
+}
+
 - (void)updateFocusMode
 {
     AVCaptureDevice *device = [self.videoCaptureDeviceInput device];
