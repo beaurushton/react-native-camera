@@ -16,6 +16,8 @@ RCT_EXPORT_VIEW_PROPERTY(onCameraReady, RCTDirectEventBlock);
 RCT_EXPORT_VIEW_PROPERTY(onMountError, RCTDirectEventBlock);
 RCT_EXPORT_VIEW_PROPERTY(onBarCodeRead, RCTDirectEventBlock);
 RCT_EXPORT_VIEW_PROPERTY(onFacesDetected, RCTDirectEventBlock);
+RCT_EXPORT_VIEW_PROPERTY(onAudioMetering, RCTDirectEventBlock);
+RCT_EXPORT_VIEW_PROPERTY(onCameraFeaturesDetected, RCTDirectEventBlock);
 
 + (BOOL)requiresMainQueueSetup
 {
@@ -73,7 +75,7 @@ RCT_EXPORT_VIEW_PROPERTY(onFacesDetected, RCTDirectEventBlock);
 
 - (NSArray<NSString *> *)supportedEvents
 {
-    return @[@"onCameraReady", @"onMountError", @"onBarCodeRead", @"onFacesDetected"];
+    return @[@"onCameraReady", @"onMountError", @"onBarCodeRead", @"onFacesDetected", @"onAudioMetering", @"onCameraFeaturesDetected"];
 }
 
 + (NSDictionary *)validCodecTypes
@@ -152,6 +154,12 @@ RCT_CUSTOM_VIEW_PROPERTY(autoExposurePointOfInterest, NSDictionary, RNCamera)
     [view updateAutoExposurePointOfInterest];
 }
 
+RCT_CUSTOM_VIEW_PROPERTY(audioMeteringEnabled, BOOL, RNCamera)
+{
+    view.audioMeteringEnabled = [RCTConvert BOOL:json];
+    [view updateAudioMetering];
+}
+
 RCT_CUSTOM_VIEW_PROPERTY(autoFocus, NSInteger, RNCamera)
 {
     [view setAutoFocus:[RCTConvert NSInteger:json]];
@@ -204,7 +212,7 @@ RCT_CUSTOM_VIEW_PROPERTY(faceDetectionClassifications, NSString, RNCamera)
 
 RCT_CUSTOM_VIEW_PROPERTY(barCodeScannerEnabled, BOOL, RNCamera)
 {
-    
+
     view.barCodeReading = [RCTConvert BOOL:json];
     [view setupOrDisableBarcodeScanner];
 }
@@ -280,7 +288,7 @@ RCT_REMAP_METHOD(stopRecording, reactTag:(nonnull NSNumber *)reactTag)
 RCT_EXPORT_METHOD(checkDeviceAuthorizationStatus:(RCTPromiseResolveBlock)resolve
                   reject:(__unused RCTPromiseRejectBlock)reject) {
     __block NSString *mediaType = AVMediaTypeVideo;
-    
+
     [AVCaptureDevice requestAccessForMediaType:mediaType completionHandler:^(BOOL granted) {
         if (!granted) {
             resolve(@(granted));
@@ -297,7 +305,7 @@ RCT_EXPORT_METHOD(checkDeviceAuthorizationStatus:(RCTPromiseResolveBlock)resolve
 RCT_EXPORT_METHOD(checkVideoAuthorizationStatus:(RCTPromiseResolveBlock)resolve
                   reject:(__unused RCTPromiseRejectBlock)reject) {
     __block NSString *mediaType = AVMediaTypeVideo;
-    
+
     [AVCaptureDevice requestAccessForMediaType:mediaType completionHandler:^(BOOL granted) {
         resolve(@(granted));
     }];

@@ -160,7 +160,7 @@ const styles = StyleSheet.create({
 AppRegistry.registerComponent('BadInstagramCloneApp', () => App);
 ```
 
-#### `camera` 
+#### `camera`
 
 *It's the RNCamera's reference*
 
@@ -275,6 +275,10 @@ By default a `Camera not authorized` message will be displayed when access to th
 By default a <ActivityIndicator> will be displayed while the component is waiting for the user to grant/deny access to the camera, if set displays the passed react element instead of the default one.
 
 ### Native Event callbacks props
+
+#### `onCameraFeaturesDetected`
+
+Function to be called when camera is ready or features change.  Returns a data object with details of supported frame rates, resolutions, lenses, exposurePointOfInterest and focusPointOfInterest support and audio input sources.
 
 #### `onCameraReady`
 

@@ -80,6 +80,8 @@ type PropsType = typeof View.props & {
   ratio?: string,
   focusDepth?: number,
   type?: number | string,
+  onAudioMetering?: Function,
+  onCameraFeaturesDetected?: Function,
   onCameraReady?: Function,
   onBarCodeRead?: Function,
   onGoogleVisionBarcodesDetected?: Function,
@@ -182,6 +184,8 @@ export default class Camera extends React.Component<PropsType, StateType> {
     ratio: PropTypes.string,
     focusDepth: PropTypes.number,
     onMountError: PropTypes.func,
+    onAudioMetering: PropTypes.func,
+    onCameraFeaturesDetected: PropTypes.func,
     onCameraReady: PropTypes.func,
     onBarCodeRead: PropTypes.func,
     onGoogleVisionBarcodesDetected: PropTypes.func,
@@ -193,6 +197,7 @@ export default class Camera extends React.Component<PropsType, StateType> {
     barCodeTypes: PropTypes.arrayOf(PropTypes.string),
     googleVisionBarcodeType: PropTypes.number,
     type: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
+    useTelephoto: PropTypes.bool,
     flashMode: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
     whiteBalance: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
     autoExposure: PropTypes.oneOfType([PropTypes.string, PropTypes.number, PropTypes.bool]),
@@ -212,6 +217,7 @@ export default class Camera extends React.Component<PropsType, StateType> {
     zoom: 0,
     ratio: '4:3',
     focusDepth: 0,
+    useTelephoto: false,
     type: CameraManager.Type.back,
     autoExposure: CameraManager.AutoExposure.on,
     autoFocus: CameraManager.AutoFocus.on,
@@ -295,9 +301,21 @@ export default class Camera extends React.Component<PropsType, StateType> {
     }
   };
 
-  _onCameraReady = () => {
+  _onCameraReady = ({ nativeEvent }: EventCallbackArgumentsType) => {
     if (this.props.onCameraReady) {
-      this.props.onCameraReady();
+      this.props.onCameraReady(nativeEvent);
+    }
+  };
+
+  _onAudioMetering = ({ nativeEvent }: EventCallbackArgumentsType) => {
+    if (this.props.onAudioMetering) {
+      this.props.onAudioMetering(nativeEvent);
+    }
+  };
+
+  _onCameraFeaturesDetected = ({ nativeEvent }: EventCallbackArgumentsType) => {
+    if (this.props.onCameraFeaturesDetected) {
+      this.props.onCameraFeaturesDetected(nativeEvent);
     }
   };
 
@@ -369,6 +387,8 @@ export default class Camera extends React.Component<PropsType, StateType> {
           ref={this._setReference}
           onMountError={this._onMountError}
           onCameraReady={this._onCameraReady}
+          onCameraFeaturesDetected={this._onCameraFeaturesDetected}
+          onAudioMetering={this._onAudioMetering}
           onGoogleVisionBarcodesDetected={this._onObjectDetected(
             this.props.onGoogleVisionBarcodesDetected,
           )}
@@ -388,6 +408,8 @@ export default class Camera extends React.Component<PropsType, StateType> {
 
   _convertNativeProps(props: PropsType) {
     const newProps = mapValues(props, this._convertProp);
+
+    newProps.audioMeteringEnabled = typeof props.onAudioMetering === 'function';
 
     if (props.onBarCodeRead) {
       newProps.barCodeScannerEnabled = true;
@@ -436,8 +458,11 @@ const RNCamera = requireNativeComponent('RNCamera', Camera, {
     faceDetectorEnabled: true,
     textRecognizerEnabled: true,
     importantForAccessibility: true,
+    onAudioMetering: true,
+    audioMeteringEnabled: true,
     onBarCodeRead: true,
     onGoogleVisionBarcodesDetected: true,
+    onCameraFeaturesDetected: true,
     onCameraReady: true,
     onFaceDetected: true,
     onLayout: true,

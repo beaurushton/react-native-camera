@@ -22,6 +22,9 @@
 @property(nonatomic, strong) id runtimeErrorHandlingObserver;
 @property(nonatomic, strong) AVCaptureVideoPreviewLayer *previewLayer;
 @property(nonatomic, strong) NSArray *barCodeTypes;
+@property(nonatomic, strong) AVAudioRecorder *audioRecorder;
+@property(nonatomic, strong) NSTimer *meterTimer;
+@property (nonatomic, assign, getter=isAudioMeteringEnabled) BOOL audioMeteringEnabled;
 
 @property(nonatomic, assign) NSInteger presetCamera;
 @property (assign, nonatomic) NSInteger flashMode;
@@ -57,6 +60,9 @@
 - (void)onMountingError:(NSDictionary *)event;
 - (void)onCodeRead:(NSDictionary *)event;
 - (void)onFacesDetected:(NSDictionary *)event;
+- (void)onAudioMetering:(NSDictionary *)event;
+- (void)updateAudioMetering;
+- (void)onCameraFeaturesDetected:(NSDictionary *)event;
 
 @end
 
