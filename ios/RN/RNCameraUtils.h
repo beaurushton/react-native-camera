@@ -11,7 +11,7 @@
 @interface RNCameraUtils : NSObject
 
 // Camera utilities
-+ (AVCaptureDevice *)deviceWithMediaType:(NSString *)mediaType preferringPosition:(AVCaptureDevicePosition)position;
++ (AVCaptureDevice *)deviceWithMediaType:(NSString *)mediaType preferringPosition:(AVCaptureDevicePosition)position preferringDeviceType:(AVCaptureDeviceType)deviceType;
 
 // Enum conversions
 + (float)temperatureForWhiteBalance:(RNCameraWhiteBalance)whiteBalance;

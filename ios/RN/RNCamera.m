@@ -860,21 +860,29 @@ static NSDictionary *defaultFaceDetectorOptions = nil;
 
     AVCaptureVideoOrientation orientation = [RNCameraUtils videoOrientationForInterfaceOrientation:interfaceOrientation];
     dispatch_async(self.sessionQueue, ^{
-        [self.session beginConfiguration];
-
-        NSError *error = nil;
-        AVCaptureDevice *captureDevice = [RNCameraUtils deviceWithMediaType:AVMediaTypeVideo preferringPosition:self.presetCamera];
-        AVCaptureDeviceInput *captureDeviceInput = [AVCaptureDeviceInput deviceInputWithDevice:captureDevice error:&error];
-
-        if (error || captureDeviceInput == nil) {
+        if (@available(iOS 10.0, *)) {
+          [self.session beginConfiguration];
+          
+          NSError *error = nil;
+          
+          AVCaptureDeviceType prefferedDeviceType = AVCaptureDeviceTypeBuiltInWideAngleCamera;
+          // set to telephoto
+          if (self.useTelephoto) {
+            prefferedDeviceType = AVCaptureDeviceTypeBuiltInTelephotoCamera;
+          }
+          AVCaptureDevice *captureDevice = [RNCameraUtils deviceWithMediaType:AVMediaTypeVideo preferringPosition:self.presetCamera preferringDeviceType:prefferedDeviceType];
+          
+          AVCaptureDeviceInput *captureDeviceInput = [AVCaptureDeviceInput deviceInputWithDevice:captureDevice error:&error];
+          
+          if (error || captureDeviceInput == nil) {
             RCTLog(@"%s: %@", __func__, error);
             return;
-        }
-
-        [self.session removeInput:self.videoCaptureDeviceInput];
-        if ([self.session canAddInput:captureDeviceInput]) {
+          }
+          
+          [self.session removeInput:self.videoCaptureDeviceInput];
+          if ([self.session canAddInput:captureDeviceInput]) {
             [self.session addInput:captureDeviceInput];
-
+            
             self.videoCaptureDeviceInput = captureDeviceInput;
             [self updateFlashMode];
             [self updateZoom];
@@ -884,9 +892,11 @@ static NSDictionary *defaultFaceDetectorOptions = nil;
             [self updateWhiteBalance];
             [self.previewLayer.connection setVideoOrientation:orientation];
             [self _updateMetadataObjectsToRecognize];
+          }
+          
+          [self.session commitConfiguration];
         }
-
-        [self.session commitConfiguration];
+      
     });
 }
 

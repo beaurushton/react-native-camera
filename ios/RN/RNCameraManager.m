@@ -136,6 +136,12 @@ RCT_CUSTOM_VIEW_PROPERTY(type, NSInteger, RNCamera)
     }
 }
 
+RCT_CUSTOM_VIEW_PROPERTY(useTelephoto, BOOL, RNCamera)
+{
+    view.useTelephoto = [RCTConvert BOOL:json];
+    [view updateType];
+}
+
 RCT_CUSTOM_VIEW_PROPERTY(flashMode, NSInteger, RNCamera)
 {
     [view setFlashMode:[RCTConvert NSInteger:json]];

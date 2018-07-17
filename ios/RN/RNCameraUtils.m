@@ -11,18 +11,29 @@
 
 # pragma mark - Camera utilities
 
-+ (AVCaptureDevice *)deviceWithMediaType:(AVMediaType)mediaType preferringPosition:(AVCaptureDevicePosition)position
-{
++ (AVCaptureDevice *)deviceWithMediaType:(AVMediaType)mediaType preferringPosition:(AVCaptureDevicePosition)position preferringDeviceType:(AVCaptureDeviceType)deviceType
+API_AVAILABLE(ios(10.0)){
+    // first try get a device that matches our preffered device type
+    if (@available(iOS 10.0, *)) {
+       AVCaptureDevice *preferredDevice = [AVCaptureDevice
+                                           defaultDeviceWithDeviceType: deviceType
+                                           mediaType: mediaType
+                                           position: position];
+       if (preferredDevice != nil) {
+         return preferredDevice;
+       }
+    }
+
+    // fallback to the first device that matches the position
     NSArray *devices = [AVCaptureDevice devicesWithMediaType:mediaType];
     AVCaptureDevice *captureDevice = [devices firstObject];
-    
     for (AVCaptureDevice *device in devices) {
         if ([device position] == position) {
             captureDevice = device;
             break;
         }
     }
-    
+
     return captureDevice;
 }
 

@@ -27,6 +27,7 @@
 @property (nonatomic, assign, getter=isAudioMeteringEnabled) BOOL audioMeteringEnabled;
 
 @property(nonatomic, assign) NSInteger presetCamera;
+@property (nonatomic, assign) BOOL useTelephoto;
 @property (assign, nonatomic) NSInteger flashMode;
 @property (assign, nonatomic) CGFloat zoom;
 @property (assign, nonatomic) NSInteger autoExposure;
