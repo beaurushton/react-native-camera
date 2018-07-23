@@ -190,6 +190,12 @@ RCT_CUSTOM_VIEW_PROPERTY(zoom, NSNumber, RNCamera)
     [view updateZoom];
 }
 
+RCT_CUSTOM_VIEW_PROPERTY(frameRate, NSInteger, RNCamera)
+{
+    [view setFrameRate:[RCTConvert NSInteger:json]];
+    [view updateFrameRate];
+}
+
 RCT_CUSTOM_VIEW_PROPERTY(whiteBalance, NSInteger, RNCamera)
 {
     [view setWhiteBalance: [RCTConvert NSInteger:json]];

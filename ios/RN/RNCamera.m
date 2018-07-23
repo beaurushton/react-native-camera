@@ -206,6 +206,35 @@ static NSDictionary *defaultFaceDetectorOptions = nil;
     });
 }
 
+- (void)updateFrameRate
+{
+    // RCTLogWarn(@"configure for frame rate %d", self.frameRate);
+    AVCaptureDevice *device = [self.videoCaptureDeviceInput device];
+
+    AVCaptureDeviceFormat *matchingFormat = nil;
+    BOOL matchingFormatFound = NO;
+
+    for ( AVCaptureDeviceFormat *format in [device formats] ) {
+        for ( AVFrameRateRange *range in format.videoSupportedFrameRateRanges ) {
+            if ( range.minFrameRate <= (double)self.frameRate && range.maxFrameRate >= (double)self.frameRate) {
+                matchingFormat = format;
+                matchingFormatFound = YES;
+                break;
+            }
+            if (matchingFormatFound) break;
+        }
+    }
+    if ( matchingFormat ) {
+        if ( [device lockForConfiguration:NULL] == YES ) {
+            RCTLogWarn(@"matchingFormat found %@", matchingFormat);
+            device.activeFormat = matchingFormat;
+            device.activeVideoMinFrameDuration = CMTimeMake(1, (int)self.frameRate);
+            device.activeVideoMaxFrameDuration = CMTimeMake(1, (int)self.frameRate);
+            [device unlockForConfiguration];
+        }
+    }
+}
+
 - (void)updateFlashMode
 {
     AVCaptureDevice *device = [self.videoCaptureDeviceInput device];
@@ -894,6 +923,7 @@ static NSDictionary *defaultFaceDetectorOptions = nil;
             [self updateWhiteBalance];
             [self.previewLayer.connection setVideoOrientation:orientation];
             [self _updateMetadataObjectsToRecognize];
+            [self updateFrameRate];
           }
           
           [self.session commitConfiguration];

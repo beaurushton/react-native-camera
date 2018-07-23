@@ -30,6 +30,7 @@
 @property (nonatomic, assign) BOOL useTelephoto;
 @property (assign, nonatomic) NSInteger flashMode;
 @property (assign, nonatomic) CGFloat zoom;
+@property (assign, nonatomic) NSInteger frameRate;
 @property (assign, nonatomic) NSInteger autoExposure;
 @property (copy, nonatomic) NSDictionary *autoExposurePointOfInterest;
 @property (assign, nonatomic) NSInteger autoFocus;
@@ -47,6 +48,7 @@
 - (void)updateAutoFocusPointOfInterest;
 - (void)updateAutoExposureMode;
 - (void)updateAutoExposurePointOfInterest;
+- (void)updateFrameRate;
 - (void)updateZoom;
 - (void)updateWhiteBalance;
 - (void)updateFaceDetecting:(id)isDetectingFaces;

@@ -230,6 +230,12 @@ Value: float from `0` to `1.0`
 
 Manually set camera focus. Only works with `autoFocus` off. The value 0 is minimum focus depth, 1 is maximum focus depth. For a medium focus depth, for example, you could use 0.5.
 
+#### `frameRate`
+
+Value: integer
+
+Manually set camera frame rate.  If frame rate is not supported the closest available will be used.  You can detect supported frame rates via the `onCameraFeaturesDetected` property callback.
+
 #### `Android` `ratio`
 
 A string representing the camera ratio in the format 'height:width'. Default is `"4:3"`.
