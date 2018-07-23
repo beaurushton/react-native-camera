@@ -921,9 +921,12 @@ static NSDictionary *defaultFaceDetectorOptions = nil;
             [self updateFocusMode];
             [self updateFocusDepth];
             [self updateAutoFocusPointOfInterest];
+            [self updateAutoExposureMode];
+            [self updateAutoExposurePointOfInterest];
             [self updateWhiteBalance];
             [self.previewLayer.connection setVideoOrientation:orientation];
             [self _updateMetadataObjectsToRecognize];
+            [self detectCameraFeatures];
             [self updateFrameRate];
           }
 
