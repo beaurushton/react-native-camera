@@ -844,9 +844,11 @@ static NSDictionary *defaultFaceDetectorOptions = nil;
 
 - (void)initializeCaptureSessionInput
 {
-    if (self.videoCaptureDeviceInput.device.position == self.presetCamera) {
-        return;
-    }
+    // commented to allow for changing to telephoto lens while on back camera
+    // if (self.videoCaptureDeviceInput.device.position == self.presetCamera) {
+    //     return;
+    // }
+
     __block UIInterfaceOrientation interfaceOrientation;
 
     void (^statusBlock)() = ^() {
