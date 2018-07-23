@@ -40,7 +40,7 @@ static NSDictionary *defaultFaceDetectorOptions = nil;
 #if !(TARGET_IPHONE_SIMULATOR)
         self.previewLayer =
         [AVCaptureVideoPreviewLayer layerWithSession:self.session];
-        self.previewLayer.videoGravity = AVLayerVideoGravityResizeAspectFill;
+        self.previewLayer.videoGravity = AVLayerVideoGravityResizeAspect;
         self.previewLayer.needsDisplayOnBoundsChange = YES;
 #endif
         self.paused = NO;
@@ -809,8 +809,9 @@ static NSDictionary *defaultFaceDetectorOptions = nil;
             return;
         }
 
-        self.session.sessionPreset = AVCaptureSessionPresetPhoto;
-        
+        // self.session.sessionPreset = AVCaptureSessionPresetPhoto;
+        self.session.sessionPreset = AVCaptureSessionPreset1920x1080;
+
         AVCaptureStillImageOutput *stillImageOutput = [[AVCaptureStillImageOutput alloc] init];
         if ([self.session canAddOutput:stillImageOutput]) {
             stillImageOutput.outputSettings = @{AVVideoCodecKey : AVVideoCodecJPEG};
@@ -893,27 +894,27 @@ static NSDictionary *defaultFaceDetectorOptions = nil;
     dispatch_async(self.sessionQueue, ^{
         if (@available(iOS 10.0, *)) {
           [self.session beginConfiguration];
-          
+
           NSError *error = nil;
-          
+
           AVCaptureDeviceType prefferedDeviceType = AVCaptureDeviceTypeBuiltInWideAngleCamera;
           // set to telephoto
           if (self.useTelephoto) {
             prefferedDeviceType = AVCaptureDeviceTypeBuiltInTelephotoCamera;
           }
           AVCaptureDevice *captureDevice = [RNCameraUtils deviceWithMediaType:AVMediaTypeVideo preferringPosition:self.presetCamera preferringDeviceType:prefferedDeviceType];
-          
+
           AVCaptureDeviceInput *captureDeviceInput = [AVCaptureDeviceInput deviceInputWithDevice:captureDevice error:&error];
-          
+
           if (error || captureDeviceInput == nil) {
             RCTLog(@"%s: %@", __func__, error);
             return;
           }
-          
+
           [self.session removeInput:self.videoCaptureDeviceInput];
           if ([self.session canAddInput:captureDeviceInput]) {
             [self.session addInput:captureDeviceInput];
-            
+
             self.videoCaptureDeviceInput = captureDeviceInput;
             [self updateFlashMode];
             [self updateZoom];
@@ -925,10 +926,10 @@ static NSDictionary *defaultFaceDetectorOptions = nil;
             [self _updateMetadataObjectsToRecognize];
             [self updateFrameRate];
           }
-          
+
           [self.session commitConfiguration];
         }
-      
+
     });
 }
 
@@ -1171,9 +1172,10 @@ static NSDictionary *defaultFaceDetectorOptions = nil;
     [_faceDetectorManager maybeStartFaceDetectionOnSession:_session withPreviewLayer:_previewLayer];
 #endif
 
-    if (self.session.sessionPreset != AVCaptureSessionPresetPhoto) {
-        [self updateSessionPreset:AVCaptureSessionPresetPhoto];
-    }
+    // TODO: removed because we don't want this preset
+    // if (self.session.sessionPreset != AVCaptureSessionPresetPhoto) {
+    //     [self updateSessionPreset:AVCaptureSessionPresetPhoto];
+    // }
 }
 
 # pragma mark - Face detector
