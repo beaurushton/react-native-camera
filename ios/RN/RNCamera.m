@@ -59,6 +59,8 @@ static NSDictionary *defaultFaceDetectorOptions = nil;
 
         self.autoFocus = -1;
         NSError *sessionError = nil;
+
+        // audio monitoring
         AVAudioSession *audioSession = [AVAudioSession sharedInstance];
         [audioSession setCategory:AVAudioSessionCategoryPlayAndRecord error:&sessionError];
         [audioSession setActive:YES error:&sessionError];
@@ -76,16 +78,16 @@ static NSDictionary *defaultFaceDetectorOptions = nil;
 
         if([[AVAudioSession sharedInstance] respondsToSelector:@selector(requestRecordPermission:)]) {
             [[AVAudioSession sharedInstance] requestRecordPermission:^(BOOL granted) {
-                // RCTLogWarn(@"permission : %d", granted);
-                // if(granted)[self setupMic];
+                if(granted) {
+                    [self.audioRecorder prepareToRecord];
+                    self.audioRecorder.meteringEnabled = YES;
+                    [self.audioRecorder record];
+                    [self.audioRecorder updateMeters];
+                    [self updateAudioMetering];
+                };
             }];
         }
 
-        [self.audioRecorder prepareToRecord];
-        self.audioRecorder.meteringEnabled = YES;
-        [self.audioRecorder record];
-        [self.audioRecorder updateMeters];
-        [self updateAudioMetering];
 
         //        [[NSNotificationCenter defaultCenter] addObserver:self
         //                                                 selector:@selector(bridgeDidForeground:)
@@ -665,15 +667,12 @@ static NSDictionary *defaultFaceDetectorOptions = nil;
     // available inputs
     NSMutableArray *availableAudioInputs = [NSMutableArray array];
     for (AVAudioSessionPortDescription *desc in audioSession.availableInputs) {
-        // RCTLogWarn(@"av input route desc %@", desc);
         [availableAudioInputs addObject: desc.portType];
     }
     cameraFeatures[@"availableAudioInputs"] = availableAudioInputs;
 
-
     //  AVCaptureDevice *audioCaptureDevice = [AVCaptureDevice defaultDeviceWithMediaType:AVMediaTypeAudio];
     //  RCTLogWarn(@"default audio device %@", audioCaptureDevice);
-
     // // available inputs
     // if (@available(iOS 10.0, *)) {
     //     AVCaptureDeviceDiscoverySession *audioInputs = [AVCaptureDeviceDiscoverySession discoverySessionWithDeviceTypes:@[AVCaptureDeviceTypeBuiltInMicrophone] mediaType:AVMediaTypeAudio position:AVCaptureDevicePositionUnspecified];
@@ -683,7 +682,6 @@ static NSDictionary *defaultFaceDetectorOptions = nil;
     // } else {
     //     // Fallback on earlier versions
     // }
-
 
 
     // CAMERAS
@@ -1031,15 +1029,12 @@ static NSDictionary *defaultFaceDetectorOptions = nil;
 
 - (void)handleRouteChange:(NSNotification *)notification
 {
-    NSNumber *reasonValue = [[notification userInfo] objectForKey:AVAudioSessionRouteChangeReasonKey];
-    NSString *reasonPreviousRoute = [[notification userInfo] objectForKey:AVAudioSessionRouteChangePreviousRouteKey];
-    // RCTLogWarn(@"SESSION ROUTE CHANGED %@ %@", reasonValue, reasonPreviousRoute);
-
     [self detectCameraFeatures];
-
+    // NSNumber *reasonValue = [[notification userInfo] objectForKey:AVAudioSessionRouteChangeReasonKey];
+    // NSString *reasonPreviousRoute = [[notification userInfo] objectForKey:AVAudioSessionRouteChangePreviousRouteKey];
+    // RCTLogWarn(@"SESSION ROUTE CHANGED %@ %@", reasonValue, reasonPreviousRoute);
     // AVCaptureDevice *audioCaptureDevice = [AVCaptureDevice defaultDeviceWithMediaType:AVMediaTypeAudio];
     // RCTLogWarn(@"audioCaptureDevice %@", audioCaptureDevice);
-
     // switch (reasonValue.unsignedIntegerValue) {
     //     case AVAudioSessionRouteChangeReasonNewDeviceAvailable: {
     //             RCTLogWarn(@"new device");
@@ -1050,7 +1045,6 @@ static NSDictionary *defaultFaceDetectorOptions = nil;
     //     default:
     //         break;
     // }
-
 }
 
 # pragma mark - AVCaptureMetadataOutput
