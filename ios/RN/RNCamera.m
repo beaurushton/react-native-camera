@@ -206,33 +206,40 @@ static NSDictionary *defaultFaceDetectorOptions = nil;
     });
 }
 
-- (void)updateFrameRate
+- (void)updateFrameRateAndResolution
 {
-    // RCTLogWarn(@"configure for frame rate %d", self.frameRate);
-    AVCaptureDevice *device = [self.videoCaptureDeviceInput device];
+    if (self.frameRate && self.resolution) {
+        RCTLogWarn(@"configure for fr %ld resolution %@", (long)self.frameRate, self.resolution);
+        AVCaptureDevice *device = [self.videoCaptureDeviceInput device];
 
-    AVCaptureDeviceFormat *matchingFormat = nil;
-    BOOL matchingFormatFound = NO;
+        AVCaptureDeviceFormat *matchingFormat = nil;
+        BOOL matchingFormatFound = NO;
 
-    for ( AVCaptureDeviceFormat *format in [device formats] ) {
-        for ( AVFrameRateRange *range in format.videoSupportedFrameRateRanges ) {
-            if ( range.minFrameRate <= (double)self.frameRate && range.maxFrameRate >= (double)self.frameRate) {
-                matchingFormat = format;
-                matchingFormatFound = YES;
-                break;
+        for ( AVCaptureDeviceFormat *format in [device formats] ) {
+            CMVideoDimensions dimensions = CMVideoFormatDescriptionGetDimensions(format.formatDescription);
+            NSString *dimensionKey = [NSString stringWithFormat:@"%dx%d", dimensions.width, dimensions.height];
+            if (dimensionKey == self.resolution) {
+              for ( AVFrameRateRange *range in format.videoSupportedFrameRateRanges ) {
+                if ( range.minFrameRate <= (double)self.frameRate && range.maxFrameRate >= (double)self.frameRate) {
+                  matchingFormat = format;
+                  matchingFormatFound = YES;
+                  break;
+                }
+                if (matchingFormatFound) break;
+              }
             }
-            if (matchingFormatFound) break;
+        }
+        if ( matchingFormat ) {
+            if ( [device lockForConfiguration:NULL] == YES ) {
+                RCTLogWarn(@"matchingFormat found %@", matchingFormat);
+                device.activeFormat = matchingFormat;
+                device.activeVideoMinFrameDuration = CMTimeMake(1, (int)self.frameRate);
+                device.activeVideoMaxFrameDuration = CMTimeMake(1, (int)self.frameRate);
+                [device unlockForConfiguration];
+            }
         }
     }
-    if ( matchingFormat ) {
-        if ( [device lockForConfiguration:NULL] == YES ) {
-            RCTLogWarn(@"matchingFormat found %@", matchingFormat);
-            device.activeFormat = matchingFormat;
-            device.activeVideoMinFrameDuration = CMTimeMake(1, (int)self.frameRate);
-            device.activeVideoMaxFrameDuration = CMTimeMake(1, (int)self.frameRate);
-            [device unlockForConfiguration];
-        }
-    }
+
 }
 
 - (void)updateFlashMode
@@ -603,10 +610,6 @@ static NSDictionary *defaultFaceDetectorOptions = nil;
         self.movieFileOutput.maxRecordedFileSize = [options[@"maxFileSize"] integerValue];
     }
 
-    if (options[@"quality"]) {
-        [self updateSessionPreset:[RNCameraUtils captureSessionPresetForVideoResolution:(RNCameraVideoResolution)[options[@"quality"] integerValue]]];
-    }
-
     [self updateSessionAudioIsMuted:!!options[@"mute"]];
 
     AVCaptureConnection *connection = [self.movieFileOutput connectionWithMediaType:AVMediaTypeVideo];
@@ -914,8 +917,9 @@ static NSDictionary *defaultFaceDetectorOptions = nil;
           [self.session removeInput:self.videoCaptureDeviceInput];
           if ([self.session canAddInput:captureDeviceInput]) {
             [self.session addInput:captureDeviceInput];
-
             self.videoCaptureDeviceInput = captureDeviceInput;
+            [self detectCameraFeatures];
+            [self updateFrameRateAndResolution];
             [self updateFlashMode];
             [self updateZoom];
             [self updateFocusMode];
@@ -926,8 +930,6 @@ static NSDictionary *defaultFaceDetectorOptions = nil;
             [self updateWhiteBalance];
             [self.previewLayer.connection setVideoOrientation:orientation];
             [self _updateMetadataObjectsToRecognize];
-            [self detectCameraFeatures];
-            [self updateFrameRate];
           }
 
           [self.session commitConfiguration];

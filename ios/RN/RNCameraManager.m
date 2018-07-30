@@ -193,7 +193,13 @@ RCT_CUSTOM_VIEW_PROPERTY(zoom, NSNumber, RNCamera)
 RCT_CUSTOM_VIEW_PROPERTY(frameRate, NSInteger, RNCamera)
 {
     [view setFrameRate:[RCTConvert NSInteger:json]];
-    [view updateFrameRate];
+    [view updateFrameRateAndResolution];
+}
+
+RCT_CUSTOM_VIEW_PROPERTY(resolution, NSString, RNCamera)
+{
+    [view setResolution:[RCTConvert NSString:json]];
+    [view updateFrameRateAndResolution];
 }
 
 RCT_CUSTOM_VIEW_PROPERTY(whiteBalance, NSInteger, RNCamera)
