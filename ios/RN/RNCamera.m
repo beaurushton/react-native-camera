@@ -487,6 +487,26 @@ static NSDictionary *defaultFaceDetectorOptions = nil;
     [device unlockForConfiguration];
 }
 
+- (void)lockWhiteBalance
+{
+    AVCaptureDevice *device = [self.videoCaptureDeviceInput device];
+    NSError *error = nil;
+
+    if (![device lockForConfiguration:&error]) {
+        if (error) {
+            RCTLogError(@"%s: %@", __func__, error);
+        }
+        return;
+    }
+
+    if (self.whiteBalance == RNCameraWhiteBalanceAuto) {
+        [device setWhiteBalanceMode:AVCaptureWhiteBalanceModeLocked];
+        [device unlockForConfiguration];
+    }
+
+    [device unlockForConfiguration];
+}
+
 #if __has_include(<GoogleMobileVision/GoogleMobileVision.h>)
 - (void)updateFaceDetecting:(id)faceDetecting
 {
@@ -633,6 +653,7 @@ static NSDictionary *defaultFaceDetectorOptions = nil;
 
     dispatch_async(self.sessionQueue, ^{
         [self updateFlashMode];
+        [self lockWhiteBalance];
         NSString *path = [RNFileSystem generatePathInDirectory:[[RNFileSystem cacheDirectoryPath] stringByAppendingPathComponent:@"Camera"] withExtension:@".mov"];
         NSURL *outputURL = [[NSURL alloc] initFileURLWithPath:path];
         [self.movieFileOutput startRecordingToOutputFileURL:outputURL recordingDelegate:self];
@@ -644,6 +665,7 @@ static NSDictionary *defaultFaceDetectorOptions = nil;
 - (void)stopRecording
 {
     [self.movieFileOutput stopRecording];
+    [self updateWhiteBalance];
 }
 
 - (void)detectCameraFeatures
