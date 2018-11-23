@@ -64,6 +64,8 @@ static NSDictionary *defaultFaceDetectorOptions = nil;
         AVAudioSession *audioSession = [AVAudioSession sharedInstance];
         [audioSession setCategory:AVAudioSessionCategoryPlayAndRecord error:&sessionError];
         [audioSession setActive:YES error:&sessionError];
+        // TODO: investigate audio output to speaker
+        // https://stackoverflow.com/questions/5931799/redirecting-audio-output-to-phone-speaker-and-mic-input-to-headphones
 
         NSURL *contentURL = [NSURL URLWithString:@"/dev/null"];
         NSMutableDictionary *recordSettings = [[NSMutableDictionary alloc] init];
@@ -88,6 +90,8 @@ static NSDictionary *defaultFaceDetectorOptions = nil;
             }];
         }
 
+        // Set up the audio straight away to avoid the weird bug with exposure
+        [self updateSessionAudioIsMuted: NO];
 
         //        [[NSNotificationCenter defaultCenter] addObserver:self
         //                                                 selector:@selector(bridgeDidForeground:)
@@ -647,7 +651,7 @@ static NSDictionary *defaultFaceDetectorOptions = nil;
         self.movieFileOutput.maxRecordedFileSize = [options[@"maxFileSize"] integerValue];
     }
 
-    [self updateSessionAudioIsMuted:!!options[@"mute"]];
+    // [self updateSessionAudioIsMuted:!!options[@"mute"]];
 
     AVCaptureConnection *connection = [self.movieFileOutput connectionWithMediaType:AVMediaTypeVideo];
     [connection setVideoOrientation:[RNCameraUtils videoOrientationForDeviceOrientation:[[UIDevice currentDevice] orientation]]];
@@ -1008,6 +1012,7 @@ static NSDictionary *defaultFaceDetectorOptions = nil;
     dispatch_async(self.sessionQueue, ^{
         [self.session beginConfiguration];
 
+        RCTLogWarn(@"updateSessionAudioIsMuted %d", isMuted);
         for (AVCaptureDeviceInput* input in [self.session inputs]) {
             if ([input.device hasMediaType:AVMediaTypeAudio]) {
                 if (isMuted) {
