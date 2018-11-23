@@ -151,7 +151,7 @@ RCT_CUSTOM_VIEW_PROPERTY(flashMode, NSInteger, RNCamera)
 RCT_CUSTOM_VIEW_PROPERTY(autoExposure, NSInteger, RNCamera)
 {
     [view setAutoExposure:[RCTConvert NSInteger:json]];
-    [view updateAutoExposureMode];
+    [view updateExposureMode];
 }
 
 RCT_CUSTOM_VIEW_PROPERTY(autoExposurePointOfInterest, NSDictionary, RNCamera)

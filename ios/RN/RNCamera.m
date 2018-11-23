@@ -329,31 +329,6 @@ static NSDictionary *defaultFaceDetectorOptions = nil;
     [device unlockForConfiguration];
 }
 
-- (void)updateAutoExposureMode
-{
-    AVCaptureDevice *device = [self.videoCaptureDeviceInput device];
-    NSError *error = nil;
-
-    if (![device lockForConfiguration:&error]) {
-        if (error) {
-            RCTLogError(@"%s: %@", __func__, error);
-        }
-        return;
-    }
-
-
-    if ([device isExposureModeSupported:self.autoExposure]) {
-        if ([device lockForConfiguration:&error]) {
-            [device setExposureMode:self.autoExposure];
-        } else {
-            if (error) {
-                RCTLogError(@"%s: %@", __func__, error);
-            }
-        }
-    }
-
-    [device unlockForConfiguration];
-}
 
 - (void)updateAutoExposurePointOfInterest
 {
@@ -370,6 +345,7 @@ static NSDictionary *defaultFaceDetectorOptions = nil;
     if ([self.autoExposurePointOfInterest objectForKey:@"x"] && [self.autoExposurePointOfInterest objectForKey:@"y"]) {
         float xValue = [self.autoExposurePointOfInterest[@"x"] floatValue];
         float yValue = [self.autoExposurePointOfInterest[@"y"] floatValue];
+        RCTLogWarn(@"updateAutoExposurePointOfInterest %f %f", xValue, yValue);
         if ([device isExposurePointOfInterestSupported] && [device isExposureModeSupported:AVCaptureExposureModeContinuousAutoExposure]) {
             CGPoint autoExposurePoint = CGPointMake(xValue, yValue);
             [device setExposurePointOfInterest:autoExposurePoint];
@@ -397,7 +373,47 @@ static NSDictionary *defaultFaceDetectorOptions = nil;
 
     if ([device isFocusModeSupported:self.autoFocus]) {
         if ([device lockForConfiguration:&error]) {
-            [device setFocusMode:self.autoFocus];
+            if (self.autoFocus) {
+                [device setFocusMode:2];
+                RCTLogWarn(@"updateFocusMode 2");
+            } else {
+                [device setFocusMode:0];
+                RCTLogWarn(@"updateFocusMode 0");
+            }
+        } else {
+            if (error) {
+                RCTLogError(@"%s: %@", __func__, error);
+            }
+        }
+    }
+
+    [device unlockForConfiguration];
+}
+
+
+- (void)updateExposureMode
+{
+    AVCaptureDevice *device = [self.videoCaptureDeviceInput device];
+    NSError *error = nil;
+
+    if (![device lockForConfiguration:&error]) {
+        if (error) {
+            RCTLogError(@"%s: %@", __func__, error);
+        }
+        return;
+    }
+
+    if ([device isExposureModeSupported:self.autoExposure]) {
+        if ([device lockForConfiguration:&error]) {
+            if (self.autoExposure) {
+                [device setExposureMode:2];
+                RCTLogWarn(@"updateExposureMode 2");
+            } else {
+                [device setExposureMode:0];
+                RCTLogWarn(@"updateExposureMode 0");
+            }
+            RCTLogWarn(@"Exposure ISO %ld", (long)device.ISO);
+            RCTLogWarn(@"Exposure duration %f", CMTimeGetSeconds(device.exposureDuration));
         } else {
             if (error) {
                 RCTLogError(@"%s: %@", __func__, error);
@@ -501,7 +517,6 @@ static NSDictionary *defaultFaceDetectorOptions = nil;
 
     if (self.whiteBalance == RNCameraWhiteBalanceAuto) {
         [device setWhiteBalanceMode:AVCaptureWhiteBalanceModeLocked];
-        [device unlockForConfiguration];
     }
 
     [device unlockForConfiguration];
@@ -651,9 +666,22 @@ static NSDictionary *defaultFaceDetectorOptions = nil;
       }
     }
 
+    // [self updateFlashMode];
+    [self updateWhiteBalance];
+    [self lockWhiteBalance];
+
+    // AVCaptureDevice *device = [self.videoCaptureDeviceInput device];
+    // RCTLogWarn(@"Exposure mode %ld", (long)device.exposureMode);
+    // RCTLogWarn(@"Exposure adjusting %ld", (long)device.adjustingExposure);
+    // RCTLogWarn(@"Exposure ISO %ld", (long)device.ISO);
+    // RCTLogWarn(@"Exposure duration %f", CMTimeGetSeconds(device.exposureDuration));
+    // RCTLogWarn(@"Exposure exposureTargetBias %ld", (long)device.exposureTargetBias);
+    // RCTLogWarn(@"Exposure exposureTargetOffset %ld", (long)device.exposureTargetOffset);
+    // RCTLogWarn(@"Exposure lowLightBoostEnabled %ld", (long)device.lowLightBoostEnabled);
+    // RCTLogWarn(@"Exposure automaticallyEnablesLowLightBoostWhenAvailable %ld", (long)device.automaticallyEnablesLowLightBoostWhenAvailable);
+
+
     dispatch_async(self.sessionQueue, ^{
-        [self updateFlashMode];
-        [self lockWhiteBalance];
         NSString *path = [RNFileSystem generatePathInDirectory:[[RNFileSystem cacheDirectoryPath] stringByAppendingPathComponent:@"Camera"] withExtension:@".mov"];
         NSURL *outputURL = [[NSURL alloc] initFileURLWithPath:path];
         [self.movieFileOutput startRecordingToOutputFileURL:outputURL recordingDelegate:self];
@@ -939,15 +967,15 @@ static NSDictionary *defaultFaceDetectorOptions = nil;
             [self.session addInput:captureDeviceInput];
             self.videoCaptureDeviceInput = captureDeviceInput;
             [self detectCameraFeatures];
+            [self updateWhiteBalance];
             [self updateFrameRateAndResolution];
-            [self updateFlashMode];
+            // [self updateFlashMode];
             [self updateZoom];
             [self updateFocusMode];
             [self updateFocusDepth];
             [self updateAutoFocusPointOfInterest];
-            [self updateAutoExposureMode];
+            [self updateExposureMode];
             [self updateAutoExposurePointOfInterest];
-            [self updateWhiteBalance];
             [self.previewLayer.connection setVideoOrientation:orientation];
             [self _updateMetadataObjectsToRecognize];
           }

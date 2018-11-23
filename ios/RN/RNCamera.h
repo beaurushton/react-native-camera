@@ -47,7 +47,7 @@
 - (void)updateFocusMode;
 - (void)updateFocusDepth;
 - (void)updateAutoFocusPointOfInterest;
-- (void)updateAutoExposureMode;
+- (void)updateExposureMode;
 - (void)updateAutoExposurePointOfInterest;
 - (void)updateFrameRateAndResolution;
 - (void)updateZoom;
