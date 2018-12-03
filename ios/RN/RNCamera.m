@@ -654,7 +654,18 @@ static NSDictionary *defaultFaceDetectorOptions = nil;
     // [self updateSessionAudioIsMuted:!!options[@"mute"]];
 
     AVCaptureConnection *connection = [self.movieFileOutput connectionWithMediaType:AVMediaTypeVideo];
-    [connection setVideoOrientation:[RNCameraUtils videoOrientationForDeviceOrientation:[[UIDevice currentDevice] orientation]]];
+    // [connection setVideoOrientation:[RNCameraUtils videoOrientationForDeviceOrientation:[[UIDevice currentDevice] orientation]]];
+
+    __block UIInterfaceOrientation interfaceOrientation;
+    void (^statusBlock)() = ^() {
+        interfaceOrientation = [[UIApplication sharedApplication] statusBarOrientation];
+    };
+    if ([NSThread isMainThread]) {
+        statusBlock();
+    } else {
+        dispatch_sync(dispatch_get_main_queue(), statusBlock);
+    }
+    [connection setVideoOrientation:[RNCameraUtils videoOrientationForInterfaceOrientation:interfaceOrientation]];
 
     if (options[@"codec"]) {
       AVVideoCodecType videoCodecType = options[@"codec"];

@@ -57,6 +57,15 @@ API_AVAILABLE(ios(10.0)){
 
 + (AVCaptureVideoOrientation)videoOrientationForDeviceOrientation:(UIDeviceOrientation)orientation
 {
+    // the UIDeviceOrientation is an enum which contains:
+    // UIDeviceOrientationUnknown,
+    // UIDeviceOrientationPortrait,
+    // UIDeviceOrientationPortraitUpsideDown,
+    // UIDeviceOrientationLandscapeLeft,
+    // UIDeviceOrientationLandscapeRight,
+    // UIDeviceOrientationFaceUp,
+    // UIDeviceOrientationFaceDown
+
     switch (orientation) {
         case UIDeviceOrientationPortrait:
             return AVCaptureVideoOrientationPortrait;
